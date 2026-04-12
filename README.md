@@ -1,43 +1,16 @@
-# AI Telegram Bot
+# Simple Telegram Bot
 
-Бот с функциями помощника, отображением времени/даты и интеграцией с OpenRouter AI.
+A minimal Telegram bot built with aiogram and FastAPI (via aiohttp) that responds to three commands.
 
-## Функции
+## Commands
+- `/start` - Start the bot
+- `/help` - Show help message
+- `/date` - Show current date and time
 
-- Приветствие и помощь (/start, /help)
-- Показ текущего времени (/time)
-- Показ текущей даты (/date)
-- Ответы на вопросы через OpenRouter AI
+## Setup
+1. Copy `.env.example` to `.env` and set your `BOT_TOKEN` and `WEBHOOK_URL`.
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the bot: `python bot.py`
 
-## Установка
-
-1. Клонируйте репозиторий
-2. Установите зависимости:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Создайте файл `.env` на основе `.env.example` и заполните токены
-
-## Запуск
-
-### Бот (Telegram)
-```bash
-python bot/main.py
-```
-
-### API (FastAPI)
-```bash
-uvicorn api.main:app --reload
-```
-
-## Переменные окружения
-
-- `TELEGRAM_BOT_TOKEN` - Токен вашего Telegram бота от @BotFather
-- `OPENROUTER_API_KEY` - API ключ от OpenRouter (https://openrouter.ai)
-
-## Структура проекта
-
-- `bot/main.py` - Основной код Telegram бота
-- `api/main.py` - FastAPI приложение для веб-интерфейса
-- `requirements.txt` - Зависимости Python
-- `.env.example` - Шаблон файла с переменными окружения
+## Deployment
+Configure your webhook URL in `.env` and ensure the server is accessible for Telegram webhooks.
