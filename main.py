@@ -1,51 +1,62 @@
-from fastapi import FastAPI
 from aiogram import Bot, Dispatcher, types
-from aiogram.contrib.fsm.storage.memory import MemoryStorage
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.utils import executor
 import logging
-import asyncio
-from config import BOT_TOKEN, WEBHOOK_URL, WEBHOOK_PATH, PORT
 
-# Initialize FastAPI app
-app = FastAPI()
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Initialize bot and dispatcher
-bot = Bot(token=BOT_TOKEN)
+API_TOKEN = 'YOUR_BOT_TOKEN_HERE'
+bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Define states
+class Form(StatesGroup):
+    name = State()
+    age = State()
+    location = State()
 
-# Webhook route
-@app.post(WEBHOOK_PATH)
-async def webhook(request: types.Update):
-    update = request.json()
-    await dp.process_update(update)
-    return {"ok": True}
+@dp.message_handler(commands=['start'])
+async def cmd_start(message: types.Message):
+    await message.reply("Hi! I'm a bot. Use /register to start registration.")
 
-# Startup event
-@app.on_event("startup")
-async def on_startup():
-    webhook_info = await bot.get_webhook_info()
-    if webhook_info.url != WEBHOOK_URL:
-        await bot.set_webhook(
-            url=WEBHOOK_URL,
-            drop_pending_updates=True
-        )
-    logger.info("Bot started")
+@dp.message_handler(commands=['register'])
+async def cmd_register(message: types.Message):
+    await Form.name.set()
+    await message.reply("What is your name?")
 
-# Shutdown event
-@app.on_event("shutdown")
-async def on_shutdown():
-    await bot.delete_webhook()
-    logger.info("Bot stopped")
+@dp.message_handler(state=Form.name)
+async def process_name(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['name'] = message.text
+    
+    await Form.next()
+    await message.reply("How old are you?")
 
-# Health check
-@app.get("/")
-async def health_check():
-    return {"status": "ok"}
+@dp.message_handler(state=Form.age)
+async def process_age(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['age'] = message.text
+    
+    await Form.next()
+    await message.reply("Where do you live?")
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+@dp.message_handler(state=Form.location)
+async def process_location(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['location'] = message.text
+        
+        # You can process the data here (save to database, etc.)
+        await message.reply(f"Thank you! Registered:\n"
+                            f"Name: {data['name']}\n"
+                            f"Age: {data['age']}\n"
+                            f"Location: {data['location']}")
+    
+    await state.finish()
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
