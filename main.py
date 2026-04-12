@@ -30,25 +30,25 @@ async def cmd_register(message: types.Message, state: FSMContext):
     await state.set_state(Form.name)
     await message.reply("What is your name?")
 
-@dp.message(state=Form.name)
+@dp.message(Form.name)
 async def process_name(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
     await state.set_state(Form.age)
     await message.reply("How old are you?")
 
-@dp.message(state=Form.age)
+@dp.message(Form.age)
 async def process_age(message: types.Message, state: FSMContext):
     await state.update_data(age=message.text)
     await state.set_state(Form.location)
     await message.reply("Where do you live?")
 
-@dp.message(state=Form.location)
+@dp.message(Form.location)
 async def process_location(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await message.reply(f"Thank you! Registered:\n"
                         f"Name: {data['name']}\n"
                         f"Age: {data['age']}\n"
-                        f"Location: {data['location']}")
+                        f"Location: {message.text}")
     await state.clear()
 
 if __name__ == '__main__':
