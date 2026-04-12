@@ -1,43 +1,29 @@
-# AI Telegram Bot
+# AI LLM Shop Bot
 
-Бот с функциями помощника, отображением времени/даты и интеграцией с OpenRouter AI.
+Telegram bot with AI assistant capabilities using OpenRouter.
 
-## Функции
+## Features
+- Greeting and help commands
+- Current time and date commands
+- AI chat via OpenRouter (GPT-3.5-turbo)
+- FastAPI backend for chat API
 
-- Приветствие и помощь (/start, /help)
-- Показ текущего времени (/time)
-- Показ текущей даты (/date)
-- Ответы на вопросы через OpenRouter AI
+## Setup
+1. Clone repository
+2. Install dependencies: `pip install -r requirements.txt`
+3. Copy `.env.example` to `.env` and fill in your tokens:
+   - `TELEGRAM_BOT_TOKEN` from BotFather
+   - `OPENROUTER_API_KEY` from OpenRouter
+4. Run bot: `python bot/main.py`
+5. Run API: `uvicorn api.main:app --reload`
 
-## Установка
+## Commands
+- `/start` - Start bot
+- `/help` - Show help
+- `/time` - Current time
+- `/date` - Current date
+- Any text - AI chat response
 
-1. Клонируйте репозиторий
-2. Установите зависимости:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Создайте файл `.env` на основе `.env.example` и заполните токены
-
-## Запуск
-
-### Бот (Telegram)
-```bash
-python bot/main.py
-```
-
-### API (FastAPI)
-```bash
-uvicorn api.main:app --reload
-```
-
-## Переменные окружения
-
-- `TELEGRAM_BOT_TOKEN` - Токен вашего Telegram бота от @BotFather
-- `OPENROUTER_API_KEY` - API ключ от OpenRouter (https://openrouter.ai)
-
-## Структура проекта
-
-- `bot/main.py` - Основной код Telegram бота
-- `api/main.py` - FastAPI приложение для веб-интерфейса
-- `requirements.txt` - Зависимости Python
-- `.env.example` - Шаблон файла с переменными окружения
+## API Endpoints
+- `GET /` - Health check
+- `POST /chat` - AI chat endpoint
