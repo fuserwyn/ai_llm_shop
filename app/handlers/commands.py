@@ -12,7 +12,7 @@ async def cmd_help(message: types.Message):
         "🤖 Доступные команды:\n\n"
         "/start - Начать работу с ботом\n"
         "/help - Показать это сообщение\n"
-        "/setdatetime - Установить дату и время\n"
+        "/time - Показать текущее время\n"
         "# Добавьте другие команды по необходимости"
     )
     await message.answer(help_text)
@@ -27,46 +27,30 @@ async def cmd_start(message: types.Message):
     )
     await message.answer(welcome_text)
 
-@router.message(Command("setdatetime"))
-async def cmd_setdatetime(message: types.Message):
-    """Обработчик команды /setdatetime - запрашивает ввод даты и времени"""
-    request_text = (
-        "Введите текущую дату и время в формате ДД.ММ.ГГГГ ЧЧ:ММ\n"
-        "Например: 15.10.2023 14:30"
+@router.message(Command("time"))
+async def cmd_time(message: types.Message):
+    """Обработчик команды /time - показывает текущее время"""
+    now = datetime.now()
+    
+    # Форматируем дату в читаемый вид
+    months = [
+        'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ]
+    
+    day = now.day
+    month_name = months[now.month - 1]
+    year = now.year
+    hour = now.hour
+    minute = now.minute
+    
+    time_text = (
+        f"🕒 Текущее время: {day} {month_name} {year} года, {hour:02d}:{minute:02d}"
     )
-    await message.answer(request_text)
+    await message.answer(time_text)
 
 @router.message()
-async def process_datetime_input(message: types.Message):
-    """Обработчик ввода даты и времени после команды /setdatetime"""
-    # Проверяем, соответствует ли сообщение формату даты и времени
-    pattern = r'^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$'
-    
-    if re.match(pattern, message.text.strip()):
-        try:
-            # Парсим дату и время
-            dt = datetime.strptime(message.text.strip(), '%d.%m.%Y %H:%M')
-            
-            # Форматируем дату в читаемый вид
-            months = [
-                'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-                'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-            ]
-            
-            day = dt.day
-            month_name = months[dt.month - 1]
-            year = dt.year
-            hour = dt.hour
-            minute = dt.minute
-            
-            response_text = (
-                f"Дата и время установлены: {day} {month_name} {year} года, {hour:02d}:{minute:02d}"
-            )
-            await message.answer(response_text)
-            
-        except ValueError:
-            await message.answer("Ошибка: введена некорректная дата или время. Попробуйте снова.")
-    else:
-        # Игнорируем сообщения, которые не являются ответом на запрос даты/времени
-        # (этот обработчик будет реагировать только на сообщения с правильным форматом)
-        pass
+async def process_other_messages(message: types.Message):
+    """Обработчик всех остальных сообщений"""
+    # Игнорируем сообщения, которые не являются командами
+    pass
