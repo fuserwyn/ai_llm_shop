@@ -1,13 +1,15 @@
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.filters import Command, StateFilter
+from fastapi import FastAPI
 import logging
 import config
+from app.handlers import commands_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
+
+# Initialize FastAPI app
+app = FastAPI(title="AI LLM Shop Bot")
 
 # Initialize bot and dispatcher
 API_TOKEN = config.BOT_TOKEN
@@ -15,41 +17,24 @@ bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
 
-# Define states
-class Form(StatesGroup):
-    name = State()
-    age = State()
-    location = State()
+# Include routers
+dp.include_router(commands_router)
 
-@dp.message(Command('start'))
-async def cmd_start(message: types.Message):
-    await message.reply("Hi! I'm a bot. Use /register to start registration.")
+@app.get("/")
+async def root():
+    return {"message": "AI LLM Shop Bot is running"}
 
-@dp.message(Command('register'))
-async def cmd_register(message: types.Message, state: FSMContext):
-    await state.set_state(Form.name)
-    await message.reply("What is your name?")
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
 
-@dp.message(StateFilter(Form.name))
-async def process_name(message: types.Message, state: FSMContext):
-    await state.update_data(name=message.text)
-    await state.set_state(Form.age)
-    await message.reply("How old are you?")
-
-@dp.message(StateFilter(Form.age))
-async def process_age(message: types.Message, state: FSMContext):
-    await state.update_data(age=message.text)
-    await state.set_state(Form.location)
-    await message.reply("Where do you live?")
-
-@dp.message(StateFilter(Form.location))
-async def process_location(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    await message.reply(f"Thank you! Registered:\n"
-                        f"Name: {data['name']}\n"
-                        f"Age: {data['age']}\n"
-                        f"Location: {data['location']}")
-    await state.clear()
+@app.on_event("startup")
+async def on_startup():
+    logging.info("Starting bot polling...")
+    # Start polling in background
+    import asyncio
+    asyncio.create_task(dp.start_polling(bot, skip_updates=True))
 
 if __name__ == '__main__':
-    dp.run_polling(bot, skip_updates=True)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
