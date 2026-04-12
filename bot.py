@@ -1,22 +1,48 @@
-import logging
-import os
-from aiogram import Bot, Dispatcher
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.utils import executor
+import asyncio
+from datetime import datetime
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import Command
+from aiogram.enums import ParseMode
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-API_TOKEN = os.getenv('TELEGRAM_API_TOKEN')
+API_TOKEN = "YOUR_BOT_TOKEN_HERE"  # Replace with your actual token
 
 bot = Bot(token=API_TOKEN)
-storage = MemoryStorage()
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher()
 
-logger.info('Бот запущен')
+@dp.message(Command("start"))
+async def cmd_start(message: types.Message):
+    await message.answer(
+        "👋 Hello! I'm your assistant bot.\n"
+        "I can help you with:\n"
+        "• /date - show current date\n"
+        "• /time - show current time\n"
+        "• /help - list all commands"
+    )
 
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+@dp.message(Command("help"))
+async def cmd_help(message: types.Message):
+    await message.answer(
+        "Available commands:\n"
+        "/start - Welcome message\n"
+        "/help - This help list\n"
+        "/date - Current date\n"
+        "/time - Current time"
+    )
+
+@dp.message(Command("date"))
+async def cmd_date(message: types.Message):
+    now = datetime.now()
+    date_str = now.strftime("%A, %B %d, %Y")
+    await message.answer(f"📅 Today's date: {date_str}")
+
+@dp.message(Command("time"))
+async def cmd_time(message: types.Message):
+    now = datetime.now()
+    time_str = now.strftime("%H:%M:%S")
+    await message.answer(f"🕒 Current time: {time_str}")
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
