@@ -31,8 +31,8 @@ async def cmd_start(message: types.Message):
 async def cmd_setdatetime(message: types.Message):
     """Обработчик команды /setdatetime - запрашивает ввод даты и времени"""
     request_text = (
-        "Введите текущую дату и время в формате ДД.ММ.ГГГГ ЧЧ:ММ\n"
-        "Например: 15.10.2023 14:30"
+        "Введите текущую дату и время в формате ГГГГ-ММ-ДД ЧЧ:ММ\n"
+        "Например: 2023-10-15 14:30"
     )
     await message.answer(request_text)
 
@@ -40,12 +40,12 @@ async def cmd_setdatetime(message: types.Message):
 async def process_datetime_input(message: types.Message):
     """Обработчик ввода даты и времени после команды /setdatetime"""
     # Проверяем, соответствует ли сообщение формату даты и времени
-    pattern = r'^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$'
+    pattern = r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$'
     
     if re.match(pattern, message.text.strip()):
         try:
             # Парсим дату и время
-            dt = datetime.strptime(message.text.strip(), '%d.%m.%Y %H:%M')
+            dt = datetime.strptime(message.text.strip(), '%Y-%m-%d %H:%M')
             
             # Форматируем дату в читаемый вид
             months = [

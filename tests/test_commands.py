@@ -24,12 +24,12 @@ async def test_cmd_setdatetime():
     await cmd_setdatetime(message)
     message.answer.assert_called_once()
     assert "Введите текущую дату и время" in message.answer.call_args[0][0]
-    assert "ДД.ММ.ГГГГ ЧЧ:ММ" in message.answer.call_args[0][0]
+    assert "ГГГГ-ММ-ДД ЧЧ:ММ" in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
 async def test_process_datetime_input_valid():
     message = AsyncMock()
-    message.text = "15.10.2023 14:30"
+    message.text = "2023-10-15 14:30"
     
     await process_datetime_input(message)
     
@@ -51,7 +51,7 @@ async def test_process_datetime_input_invalid_format():
 @pytest.mark.asyncio
 async def test_process_datetime_input_invalid_date():
     message = AsyncMock()
-    message.text = "32.13.2023 25:61"  # Некорректная дата
+    message.text = "2023-13-32 25:61"  # Некорректная дата
     
     await process_datetime_input(message)
     
