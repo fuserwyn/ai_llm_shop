@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 API_TOKEN = config.BOT_TOKEN
 bot = Bot(token=API_TOKEN)
 storage = MemoryStorage()
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher(storage=storage)
 
 # Define states
 class Form(StatesGroup):
@@ -30,19 +30,19 @@ async def cmd_register(message: types.Message, state: FSMContext):
     await state.set_state(Form.name)
     await message.reply("What is your name?")
 
-@dp.message_handler(state=Form.name)
+@dp.message(state=Form.name)
 async def process_name(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
     await state.set_state(Form.age)
     await message.reply("How old are you?")
 
-@dp.message_handler(state=Form.age)
+@dp.message(state=Form.age)
 async def process_age(message: types.Message, state: FSMContext):
     await state.update_data(age=message.text)
     await state.set_state(Form.location)
     await message.reply("Where do you live?")
 
-@dp.message_handler(state=Form.location)
+@dp.message(state=Form.location)
 async def process_location(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await message.reply(f"Thank you! Registered:\n"
