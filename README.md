@@ -1,43 +1,47 @@
-# AI LLM Shop
+# AI LLM Shop Bot
 
-This repository contains AI-powered Telegram bots built with aiogram and FastAPI.
+Telegram bot with AI capabilities using OpenRouter.
 
 ## Features
 
-- **Telegram bot for AI LLM Shop**: A bot that allows users to interact with various AI models.
-- **FastAPI backend**: Provides API endpoints for managing the bot's functionality.
+- Greeting and help commands
+- Current time and date commands
+- AI-powered responses via OpenRouter
+- FastAPI backend for additional API access
 
-## Vibecoding
+## Setup
 
-The vibecoding functionality is implemented in another Telegram bot. Please refer to the relevant repository for details.
-
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/fuserwyn/ai_llm_shop.git
-   ```
-
+1. Clone the repository
 2. Install dependencies:
-   ```bash
+   ```
    pip install -r requirements.txt
    ```
+3. Copy `.env.example` to `.env` and fill in your tokens:
+   - `TELEGRAM_BOT_TOKEN`: From BotFather
+   - `OPENROUTER_API_KEY`: From OpenRouter
 
-3. Set up environment variables (see `.env.example`).
+## Running
 
-4. Run the bot:
-   ```bash
-   python bot.py
-   ```
+### Telegram Bot
+```
+python bot/main.py
+```
 
-## Usage
+### FastAPI Server
+```
+uvicorn api.main:app --reload
+```
 
-Start the bot and interact with it via Telegram.
+## Commands
 
-## Contributing
+- `/start` - Welcome message
+- `/help` - Show help
+- `/time` - Current time
+- `/date` - Current date
+- Any other text - AI response
 
-Pull requests are welcome. For major changes, please open an issue first.
+## API Endpoints
 
-## License
-
-MIT
+- `GET /` - API status
+- `POST /chat` - Chat with AI
+- `GET /health` - Health check
