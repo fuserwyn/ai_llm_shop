@@ -1,7 +1,6 @@
 from aiogram import Router, types
 from aiogram.filters import Command
 from datetime import datetime
-import re
 
 router = Router()
 
@@ -12,7 +11,7 @@ async def cmd_help(message: types.Message):
         "🤖 Доступные команды:\n\n"
         "/start - Начать работу с ботом\n"
         "/help - Показать это сообщение\n"
-        "/setdatetime - Установить дату и время\n"
+        "/set_datetime - Установить дату и время\n"
         "# Добавьте другие команды по необходимости"
     )
     await message.answer(help_text)
@@ -27,46 +26,43 @@ async def cmd_start(message: types.Message):
     )
     await message.answer(welcome_text)
 
-@router.message(Command("setdatetime"))
-async def cmd_setdatetime(message: types.Message):
-    """Обработчик команды /setdatetime - запрашивает ввод даты и времени"""
-    request_text = (
-        "Введите текущую дату и время в формате ДД.ММ.ГГГГ ЧЧ:ММ\n"
-        "Например: 15.10.2023 14:30"
-    )
-    await message.answer(request_text)
-
-@router.message()
-async def process_datetime_input(message: types.Message):
-    """Обработчик ввода даты и времени после команды /setdatetime"""
-    # Проверяем, соответствует ли сообщение формату даты и времени
-    pattern = r'^\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}$'
+@router.message(Command("set_datetime"))
+async def cmd_set_datetime(message: types.Message):
+    """Обработчик команды /set_datetime"""
+    args = message.text.split()[1:]  # Пропускаем саму команду
     
-    if re.match(pattern, message.text.strip()):
-        try:
-            # Парсим дату и время
-            dt = datetime.strptime(message.text.strip(), '%d.%m.%Y %H:%M')
-            
-            # Форматируем дату в читаемый вид
-            months = [
-                'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-                'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-            ]
-            
-            day = dt.day
-            month_name = months[dt.month - 1]
-            year = dt.year
-            hour = dt.hour
-            minute = dt.minute
-            
-            response_text = (
-                f"Дата и время установлены: {day} {month_name} {year} года, {hour:02d}:{minute:02d}"
-            )
-            await message.answer(response_text)
-            
-        except ValueError:
-            await message.answer("Ошибка: введена некорректная дата или время. Попробуйте снова.")
-    else:
-        # Игнорируем сообщения, которые не являются ответом на запрос даты/времени
-        # (этот обработчик будет реагировать только на сообщения с правильным форматом)
-        pass
+    if len(args) < 2:
+        await message.answer(
+            "❌ Неверный формат команды. Используйте:\n"
+            "`/set_datetime [дата] [время]`\n\n"
+            "Пример:\n"
+            "`/set_datetime 2024-12-25 15:30:00`\n\n"
+            "Формат даты: ГГГГ-ММ-ДД\n"
+            "Формат времени: ЧЧ:ММ:СС"
+        )
+        return
+    
+    date_str = args[0]
+    time_str = args[1]
+    
+    try:
+        # Пробуем распарсить дату и время
+        datetime_str = f"{date_str} {time_str}"
+        dt = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+        
+        # Здесь можно добавить логику сохранения даты (в БД, кэш и т.д.)
+        # Например: await save_datetime(message.from_user.id, dt)
+        
+        await message.answer(
+            f"✅ Дата и время установлены:\n"
+            f"📅 {dt.strftime('%d.%m.%Y')} \n"
+            f"⏰ {dt.strftime('%H:%M:%S')}\n\n"
+            f"(ISO формат: {dt.isoformat()})"
+        )
+    except ValueError as e:
+        await message.answer(
+            f"❌ Ошибка парсинга даты/времени: {e}\n\n"
+            "Проверьте формат:\n"
+            "• Дата: ГГГГ-ММ-ДД (например: 2024-12-25)\n"
+            "• Время: ЧЧ:ММ:СС (например: 15:30:00)"
+        )
