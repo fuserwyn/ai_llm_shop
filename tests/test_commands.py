@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
-from app.handlers.commands import cmd_help, cmd_start, cmd_setdatetime, process_datetime_input
-from datetime import datetime
+from app.handlers.commands import cmd_help, cmd_start, cmd_set_datetime
 
 @pytest.mark.asyncio
 async def test_cmd_help():
@@ -9,7 +8,7 @@ async def test_cmd_help():
     await cmd_help(message)
     message.answer.assert_called_once()
     assert "Доступные команды" in message.answer.call_args[0][0]
-    assert "/setdatetime" in message.answer.call_args[0][0]
+    assert "/set_datetime" in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
 async def test_cmd_start():
@@ -19,42 +18,29 @@ async def test_cmd_start():
     assert "Добро пожаловать" in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
-async def test_cmd_setdatetime():
+async def test_cmd_set_datetime_valid():
     message = AsyncMock()
-    await cmd_setdatetime(message)
+    message.text = "/set_datetime 2024-12-25 15:30:00"
+    await cmd_set_datetime(message)
     message.answer.assert_called_once()
-    assert "Введите текущую дату и время" in message.answer.call_args[0][0]
-    assert "ДД.ММ.ГГГГ ЧЧ:ММ" in message.answer.call_args[0][0]
+    assert "Дата и время установлены" in message.answer.call_args[0][0]
+    assert "25.12.2024" in message.answer.call_args[0][0]
+    assert "15:30:00" in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
-async def test_process_datetime_input_valid():
+async def test_cmd_set_datetime_invalid_format():
     message = AsyncMock()
-    message.text = "15.10.2023 14:30"
-    
-    await process_datetime_input(message)
-    
+    message.text = "/set_datetime 2024-12-25"  # Не хватает времени
+    await cmd_set_datetime(message)
     message.answer.assert_called_once()
-    response = message.answer.call_args[0][0]
-    assert "Дата и время установлены" in response
-    assert "15 октября 2023 года, 14:30" in response
+    assert "Неверный формат команды" in message.answer.call_args[0][0]
+    assert "Пример" in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
-async def test_process_datetime_input_invalid_format():
+async def test_cmd_set_datetime_invalid_date():
     message = AsyncMock()
-    message.text = "неправильный формат"
-    
-    await process_datetime_input(message)
-    
-    # Не должно вызывать answer для неправильного формата
-    message.answer.assert_not_called()
-
-@pytest.mark.asyncio
-async def test_process_datetime_input_invalid_date():
-    message = AsyncMock()
-    message.text = "32.13.2023 25:61"  # Некорректная дата
-    
-    await process_datetime_input(message)
-    
+    message.text = "/set_datetime 2024-13-25 15:30:00"  # Неверный месяц
+    await cmd_set_datetime(message)
     message.answer.assert_called_once()
-    assert "Ошибка" in message.answer.call_args[0][0]
-    assert "некорректная дата" in message.answer.call_args[0][0]
+    assert "Ошибка парсинга" in message.answer.call_args[0][0]
+    assert "Проверьте формат" in message.answer.call_args[0][0]
