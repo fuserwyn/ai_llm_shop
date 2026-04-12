@@ -8,16 +8,26 @@ async def test_cmd_help():
     message = AsyncMock()
     await cmd_help(message)
     message.answer.assert_called_once()
-    assert "Доступные команды" in message.answer.call_args[0][0]
-    assert "/time" in message.answer.call_args[0][0]
-    assert "/setdatetime" not in message.answer.call_args[0][0]
+    args, kwargs = message.answer.call_args
+    assert "Доступные команды" in args[0]
+    assert "/time" in args[0]
+    assert "/setdatetime" not in args[0]
+    # Проверяем наличие клавиатуры
+    assert "reply_markup" in kwargs
+    keyboard = kwargs["reply_markup"]
+    assert keyboard.resize_keyboard is True
 
 @pytest.mark.asyncio
 async def test_cmd_start():
     message = AsyncMock()
     await cmd_start(message)
     message.answer.assert_called_once()
-    assert "Добро пожаловать" in message.answer.call_args[0][0]
+    args, kwargs = message.answer.call_args
+    assert "Добро пожаловать" in args[0]
+    # Проверяем наличие клавиатуры
+    assert "reply_markup" in kwargs
+    keyboard = kwargs["reply_markup"]
+    assert keyboard.resize_keyboard is True
 
 @pytest.mark.asyncio
 async def test_cmd_time():
@@ -41,3 +51,31 @@ async def test_process_other_messages():
     
     # Не должно вызывать answer для обычных сообщений
     message.answer.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_process_other_messages_buttons():
+    # Тест нажатия кнопки "Время"
+    message = AsyncMock()
+    message.text = "🕒 Время"
+    await process_other_messages(message)
+    message.answer.assert_called_once()
+    response = message.answer.call_args[0][0]
+    assert "Текущее время" in response
+    message.reset_mock()
+    
+    # Тест нажатия кнопки "Помощь"
+    message.text = "❓ Помощь"
+    await process_other_messages(message)
+    message.answer.assert_called_once()
+    args, kwargs = message.answer.call_args
+    assert "Доступные команды" in args[0]
+    assert "reply_markup" in kwargs
+    message.reset_mock()
+    
+    # Тест нажатия кнопки "Старт"
+    message.text = "🚀 Старт"
+    await process_other_messages(message)
+    message.answer.assert_called_once()
+    args, kwargs = message.answer.call_args
+    assert "Добро пожаловать" in args[0]
+    assert "reply_markup" in kwargs

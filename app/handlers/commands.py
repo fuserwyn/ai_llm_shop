@@ -1,5 +1,6 @@
 from aiogram import Router, types
 from aiogram.filters import Command
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from datetime import datetime
 import re
 
@@ -15,7 +16,12 @@ async def cmd_help(message: types.Message):
         "/time - Показать текущее время\n"
         "# Добавьте другие команды по необходимости"
     )
-    await message.answer(help_text)
+    builder = ReplyKeyboardBuilder()
+    builder.row(types.KeyboardButton(text="🕒 Время"))
+    builder.row(types.KeyboardButton(text="❓ Помощь"))
+    builder.row(types.KeyboardButton(text="🚀 Старт"))
+    keyboard = builder.as_markup(resize_keyboard=True)
+    await message.answer(help_text, reply_markup=keyboard)
 
 @router.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -23,9 +29,14 @@ async def cmd_start(message: types.Message):
     welcome_text = (
         "👋 Добро пожаловать!\n\n"
         "Я бот для работы с AI/LLM моделями.\n"
-        "Используйте /help для списка команд."
+        "Используйте кнопки ниже или /help для списка команд."
     )
-    await message.answer(welcome_text)
+    builder = ReplyKeyboardBuilder()
+    builder.row(types.KeyboardButton(text="🕒 Время"))
+    builder.row(types.KeyboardButton(text="❓ Помощь"))
+    builder.row(types.KeyboardButton(text="🚀 Старт"))
+    keyboard = builder.as_markup(resize_keyboard=True)
+    await message.answer(welcome_text, reply_markup=keyboard)
 
 @router.message(Command("time"))
 async def cmd_time(message: types.Message):
@@ -52,5 +63,13 @@ async def cmd_time(message: types.Message):
 @router.message()
 async def process_other_messages(message: types.Message):
     """Обработчик всех остальных сообщений"""
-    # Игнорируем сообщения, которые не являются командами
-    pass
+    # Обработка нажатий кнопок
+    if message.text == "🕒 Время":
+        await cmd_time(message)
+    elif message.text == "❓ Помощь":
+        await cmd_help(message)
+    elif message.text == "🚀 Старт":
+        await cmd_start(message)
+    else:
+        # Игнорируем другие сообщения
+        pass
