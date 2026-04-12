@@ -1,16 +1,53 @@
-# Simple Telegram Bot
+# AI LLM Shop
 
-A minimal Telegram bot built with aiogram and FastAPI (via aiohttp) that responds to three commands.
+Telegram bot shop with AI/LLM integration.
 
-## Commands
-- `/start` - Start the bot
-- `/help` - Show help message
-- `/date` - Show current date and time
+## Features
 
-## Setup
-1. Copy `.env.example` to `.env` and set your `BOT_TOKEN` and `WEBHOOK_URL`.
-2. Install dependencies: `pip install -r requirements.txt`
-3. Run the bot: `python bot.py`
+- Product catalog
+- Shopping cart
+- Order processing
+- AI-powered recommendations
+- Payment integration
 
-## Deployment
-Configure your webhook URL in `.env` and ensure the server is accessible for Telegram webhooks.
+## Tech Stack
+
+- Python 3.11+
+- aiogram for Telegram bot
+- FastAPI for webhooks
+- SQLAlchemy for database
+- Redis for caching
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/fuserwyn/ai_llm_shop.git
+cd ai_llm_shop
+```
+
+2. Create virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+4. Configure environment variables:
+```bash
+cp .env.example .env
+# Edit .env with your settings
+```
+
+5. Run the bot:
+```bash
+python main.py
+```
+
+## License
+
+MIT
