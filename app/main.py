@@ -1,51 +1,37 @@
-import asyncio
 import logging
-import sys
-import os
 from contextlib import asynccontextmanager
 
-from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
 from fastapi import FastAPI
+from aiogram import Bot, Dispatcher
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
 
 from app.bot.handlers import router as bot_router
-from app.bot.middlewares import DatabaseMiddleware
-from app.database import create_db_and_tables, engine
-from app.settings import settings
+from app.config import settings
 
-logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-USE_POLLING = os.getenv("USE_POLLING", "true").lower() == "true"
-
-bot = Bot(token=settings.BOT_TOKEN, parse_mode=ParseMode.HTML)
-dp = Dispatcher(storage=MemoryStorage())
+bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+dp = Dispatcher()
 dp.include_router(bot_router)
-dp.update.middleware(DatabaseMiddleware())
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await create_db_and_tables()
-    logger.info("Starting bot...")
-    if USE_POLLING:
-        asyncio.create_task(start_polling())
-    else:
-        raise ValueError("USE_POLLING must be set to 'true' in environment")
+    await bot.delete_webhook(drop_pending_updates=True)
+    await bot.set_webhook(url=settings.WEBHOOK_URL)
+    logger.info("Bot started")
     yield
-    logger.info("Shutting down bot...")
     await bot.session.close()
-    await engine.dispose()
-
-
-async def start_polling():
-    await dp.start_polling(bot)
-
+    logger.info("Bot stopped")
 
 app = FastAPI(lifespan=lifespan)
 
-
 @app.get("/health")
-def health_check():
+async def health_check():
     return {"status": "ok"}
+
+webhook_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
+webhook_handler.register(app, path=settings.WEBHOOK_PATH)
+setup_application(app, dp, bot=bot)
