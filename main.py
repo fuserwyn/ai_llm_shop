@@ -2,7 +2,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.filters import Command
+from aiogram.filters import Command, StateFilter
 import logging
 import config
 
@@ -30,19 +30,19 @@ async def cmd_register(message: types.Message, state: FSMContext):
     await state.set_state(Form.name)
     await message.reply("What is your name?")
 
-@dp.message(state=Form.name)
+@dp.message(StateFilter(Form.name))
 async def process_name(message: types.Message, state: FSMContext):
     await state.update_data(name=message.text)
     await state.set_state(Form.age)
     await message.reply("How old are you?")
 
-@dp.message(state=Form.age)
+@dp.message(StateFilter(Form.age))
 async def process_age(message: types.Message, state: FSMContext):
     await state.update_data(age=message.text)
     await state.set_state(Form.location)
     await message.reply("Where do you live?")
 
-@dp.message(state=Form.location)
+@dp.message(StateFilter(Form.location))
 async def process_location(message: types.Message, state: FSMContext):
     data = await state.get_data()
     await message.reply(f"Thank you! Registered:\n"
