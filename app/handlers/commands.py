@@ -13,8 +13,9 @@ def get_menu_keyboard():
     builder.button(text="🕒 Время")
     builder.button(text="ℹ️ Помощь")
     builder.button(text="🤖 Дикси")
+    builder.button(text="🔍 DeepSeek")
     builder.button(text="🏠 Главное меню")
-    builder.adjust(2, 2)  # 2 кнопки в каждом ряду
+    builder.adjust(2, 2, 1)  # 2 кнопки в первых двух рядах, 1 в последнем
     return builder.as_markup(resize_keyboard=True)
 
 @router.message(Command("help"))
@@ -26,6 +27,7 @@ async def cmd_help(message: types.Message):
         "/help - Показать это сообщение\n"
         "/time - Показать текущее время\n"
         "/dixi - Поговорить с Дикси (AI ассистент)\n"
+        "/deepseek - Использовать DeepSeek модель\n"
         "/menu - Показать меню с кнопками\n"
         "# Добавьте другие команды по необходимости"
     )
@@ -38,8 +40,10 @@ async def cmd_start(message: types.Message):
         "👋 Добро пожаловать!\n\n"
         "Я бот для работы с AI/LLM моделями.\n"
         "Используйте кнопки ниже или команды для навигации.\n\n"
-        "Теперь доступен Дикси - AI ассистент через OpenRouter!\n"
-        "Используйте команду /dixi или кнопку '🤖 Дикси'"
+        "Теперь доступны:\n"
+        "• Дикси - AI ассистент через OpenRouter!\n"
+        "• DeepSeek - мощная модель от DeepSeek\n\n"
+        "Используйте команды /dixi или /deepseek"
     )
     await message.answer(welcome_text, reply_markup=get_menu_keyboard())
 
@@ -86,7 +90,22 @@ async def cmd_dixi(message: types.Message):
     )
     await message.answer(instruction_text, reply_markup=get_menu_keyboard())
 
-@router.message(lambda message: message.text in ["🕒 Время", "ℹ️ Помощь", "🤖 Дикси", "🏠 Главное меню"])
+@router.message(Command("deepseek"))
+async def cmd_deepseek(message: types.Message):
+    """Обработчик команды /deepseek - начинает диалог с DeepSeek"""
+    instruction_text = (
+        "🔍 DeepSeek готов к работе!\n\n"
+        "Отправьте мне любое сообщение, и я передам его DeepSeek - мощной AI модели.\n\n"
+        "DeepSeek может:\n"
+        "• Решать сложные задачи\n"
+        "• Писать и анализировать код\n"
+        "• Отвечать на технические вопросы\n"
+        "• Помогать с исследованиями\n\n"
+        "Просто напишите что-нибудь..."
+    )
+    await message.answer(instruction_text, reply_markup=get_menu_keyboard())
+
+@router.message(lambda message: message.text in ["🕒 Время", "ℹ️ Помощь", "🤖 Дикси", "🔍 DeepSeek", "🏠 Главное меню"])
 async def handle_menu_buttons(message: types.Message):
     """Обработчик нажатий на кнопки меню"""
     if message.text == "🕒 Время":
@@ -95,6 +114,8 @@ async def handle_menu_buttons(message: types.Message):
         await cmd_help(message)
     elif message.text == "🤖 Дикси":
         await cmd_dixi(message)
+    elif message.text == "🔍 DeepSeek":
+        await cmd_deepseek(message)
     elif message.text == "🏠 Главное меню":
         await cmd_menu(message)
 
