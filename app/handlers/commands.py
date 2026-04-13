@@ -92,15 +92,16 @@ async def cmd_dixi(message: types.Message):
 
 @router.message(Command("deepseek"))
 async def cmd_deepseek(message: types.Message):
-    """Обработчик команды /deepseek - начинает работу с DeepSeek"""
+    """Обработчик команды /deepseek - начинает работу с DeepSeek моделью"""
     instruction_text = (
         "🔍 DeepSeek готов к работе!\n\n"
-        "Отправьте мне любой запрос, и я передам его модели DeepSeek через OpenRouter.\n\n"
+        "Отправьте мне вопрос или задачу, и я передам её мощной модели DeepSeek через OpenRouter.\n\n"
         "DeepSeek отлично справляется с:\n"
         "• Сложными техническими вопросами\n"
         "• Анализом кода и алгоритмов\n"
-        "• Научными и исследовательскими задачами\n"
-        "• Логическими рассуждениями\n\n"
+        "• Математическими вычислениями\n"
+        "• Логическими задачами\n"
+        "• И многим другим!\n\n"
         "Задайте ваш вопрос..."
     )
     await message.answer(instruction_text, reply_markup=get_menu_keyboard())
@@ -148,37 +149,3 @@ async def process_other_messages(message: types.Message):
     
     except Exception as e:
         await message.answer(f"❌ Ошибка при обращении к Дикси: {str(e)}", reply_markup=get_menu_keyboard())
-
-@router.message(lambda message: message.text and message.text.startswith("/deepseek_"))
-async def process_deepseek_query(message: types.Message):
-    """Обработчик прямых запросов к DeepSeek через команду"""
-    query = message.text.replace("/deepseek_", "", 1).strip()
-    if not query:
-        await message.answer("🔍 Пожалуйста, укажите запрос после команды /deepseek_")
-        return
-    
-    try:
-        client = OpenRouterClient()
-        
-        # Используем модель DeepSeek через OpenRouter
-        response = await client.chat_completion(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Ты - DeepSeek, мощная AI модель. Отвечай на русском языке, будь точным и информативным. Предоставляй развернутые ответы на сложные вопросы."
-                },
-                {
-                    "role": "user",
-                    "content": query
-                }
-            ],
-            model="deepseek/deepseek-chat"  # Указываем модель DeepSeek
-        )
-        
-        if response:
-            await message.answer(f"🔍 DeepSeek: {response}", reply_markup=get_menu_keyboard())
-        else:
-            await message.answer("⚠️ Извините, DeepSeek временно недоступен. Попробуйте позже.", reply_markup=get_menu_keyboard())
-    
-    except Exception as e:
-        await message.answer(f"❌ Ошибка при обращении к DeepSeek: {str(e)}", reply_markup=get_menu_keyboard())
