@@ -10,6 +10,7 @@ class OpenRouterClient:
         self.api_key = config.OPENROUTER_API_KEY
         self.base_url = config.OPENROUTER_BASE_URL
         self.model = config.OPENROUTER_MODEL
+        self.deepseek_model = config.DEEPSEEK_MODEL
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -17,13 +18,17 @@ class OpenRouterClient:
             "X-Title": "AI LLM Shop Bot"
         }
     
-    async def chat_completion(self, messages: List[Dict[str, str]], **kwargs) -> Optional[str]:
+    async def chat_completion(self, messages: List[Dict[str, str]], model: Optional[str] = None, **kwargs) -> Optional[str]:
         """Отправляет запрос на завершение чата"""
         if not self.api_key:
             raise ValueError("OPENROUTER_API_KEY не установлен в конфигурации")
         
+        # Используем указанную модель или модель по умолчанию
+        if model is None:
+            model = self.model
+        
         payload = {
-            "model": self.model,
+            "model": model,
             "messages": messages,
             **kwargs
         }
