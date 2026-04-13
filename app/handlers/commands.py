@@ -3,6 +3,7 @@ from aiogram.filters import Command
 from datetime import datetime
 import re
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from app.services.openrouter_client import OpenRouterClient
 
 router = Router()
 
@@ -11,8 +12,9 @@ def get_menu_keyboard():
     builder = ReplyKeyboardBuilder()
     builder.button(text="🕒 Время")
     builder.button(text="ℹ️ Помощь")
+    builder.button(text="🤖 Дикси")
     builder.button(text="🏠 Главное меню")
-    builder.adjust(2, 1)  # 2 кнопки в первом ряду, 1 во втором
+    builder.adjust(2, 2)  # 2 кнопки в каждом ряду
     return builder.as_markup(resize_keyboard=True)
 
 @router.message(Command("help"))
@@ -23,6 +25,7 @@ async def cmd_help(message: types.Message):
         "/start - Начать работу с ботом\n"
         "/help - Показать это сообщение\n"
         "/time - Показать текущее время\n"
+        "/dixi - Поговорить с Дикси (AI ассистент)\n"
         "/menu - Показать меню с кнопками\n"
         "# Добавьте другие команды по необходимости"
     )
@@ -34,7 +37,9 @@ async def cmd_start(message: types.Message):
     welcome_text = (
         "👋 Добро пожаловать!\n\n"
         "Я бот для работы с AI/LLM моделями.\n"
-        "Используйте кнопки ниже или команды для навигации."
+        "Используйте кнопки ниже или команды для навигации.\n\n"
+        "Теперь доступен Дикси - AI ассистент через OpenRouter!\n"
+        "Используйте команду /dixi или кнопку '🤖 Дикси'"
     )
     await message.answer(welcome_text, reply_markup=get_menu_keyboard())
 
@@ -66,18 +71,59 @@ async def cmd_menu(message: types.Message):
     menu_text = "📱 Выберите действие из меню ниже:"
     await message.answer(menu_text, reply_markup=get_menu_keyboard())
 
-@router.message(lambda message: message.text in ["🕒 Время", "ℹ️ Помощь", "🏠 Главное меню"])
+@router.message(Command("dixi"))
+async def cmd_dixi(message: types.Message):
+    """Обработчик команды /dixi - начинает диалог с Дикси"""
+    instruction_text = (
+        "🤖 Дикси готов к общению!\n\n"
+        "Отправьте мне любое сообщение, и я передам его Дикси - вашему AI ассистенту через OpenRouter.\n\n"
+        "Дикси может:\n"
+        "• Отвечать на вопросы\n"
+        "• Помогать с кодом\n"
+        "• Обсуждать идеи\n"
+        "• И многое другое!\n\n"
+        "Просто напишите что-нибудь..."
+    )
+    await message.answer(instruction_text, reply_markup=get_menu_keyboard())
+
+@router.message(lambda message: message.text in ["🕒 Время", "ℹ️ Помощь", "🤖 Дикси", "🏠 Главное меню"])
 async def handle_menu_buttons(message: types.Message):
     """Обработчик нажатий на кнопки меню"""
     if message.text == "🕒 Время":
         await cmd_time(message)
     elif message.text == "ℹ️ Помощь":
         await cmd_help(message)
+    elif message.text == "🤖 Дикси":
+        await cmd_dixi(message)
     elif message.text == "🏠 Главное меню":
         await cmd_menu(message)
 
 @router.message()
 async def process_other_messages(message: types.Message):
     """Обработчик всех остальных сообщений"""
-    # Игнорируем сообщения, которые не являются командами или кнопками меню
-    pass
+    # Если это не команда и не кнопка меню, отправляем Дикси
+    try:
+        # Инициализируем клиент OpenRouter
+        client = OpenRouterClient()
+        
+        # Отправляем сообщение пользователя в OpenRouter
+        response = await client.chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Ты - Дикси, дружелюбный AI ассистент. Отвечай на русском языке, будь полезным и вежливым."
+                },
+                {
+                    "role": "user",
+                    "content": message.text
+                }
+            ]
+        )
+        
+        if response:
+            await message.answer(f"🤖 Дикси: {response}", reply_markup=get_menu_keyboard())
+        else:
+            await message.answer("⚠️ Извините, Дикси временно недоступен. Попробуйте позже.", reply_markup=get_menu_keyboard())
+    
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при обращении к Дикси: {str(e)}", reply_markup=get_menu_keyboard())
