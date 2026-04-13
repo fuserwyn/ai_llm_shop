@@ -3,7 +3,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from fastapi import FastAPI
 import logging
 import config
-from app.handlers import commands_router
+from app.handlers import commands_router, dixi_router
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -19,6 +19,7 @@ dp = Dispatcher(storage=storage)
 
 # Include routers
 dp.include_router(commands_router)
+dp.include_router(dixi_router)
 
 @app.get("/")
 async def root():
