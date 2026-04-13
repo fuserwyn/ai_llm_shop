@@ -12,7 +12,8 @@ def get_menu_keyboard():
     builder.button(text="🕒 Время")
     builder.button(text="ℹ️ Помощь")
     builder.button(text="🏠 Главное меню")
-    builder.adjust(2, 1)  # 2 кнопки в первом ряду, 1 во втором
+    builder.button(text="🤖 Dixi")
+    builder.adjust(2, 2)  # 2 кнопки в первом ряду, 2 во втором
     return builder.as_markup(resize_keyboard=True)
 
 @router.message(Command("help"))
@@ -24,6 +25,7 @@ async def cmd_help(message: types.Message):
         "/help - Показать это сообщение\n"
         "/time - Показать текущее время\n"
         "/menu - Показать меню с кнопками\n"
+        "/dixi - Общаться с AI через OpenRouter\n"
         "# Добавьте другие команды по необходимости"
     )
     await message.answer(help_text, reply_markup=get_menu_keyboard())
@@ -66,7 +68,7 @@ async def cmd_menu(message: types.Message):
     menu_text = "📱 Выберите действие из меню ниже:"
     await message.answer(menu_text, reply_markup=get_menu_keyboard())
 
-@router.message(lambda message: message.text in ["🕒 Время", "ℹ️ Помощь", "🏠 Главное меню"])
+@router.message(lambda message: message.text in ["🕒 Время", "ℹ️ Помощь", "🏠 Главное меню", "🤖 Dixi"])
 async def handle_menu_buttons(message: types.Message):
     """Обработчик нажатий на кнопки меню"""
     if message.text == "🕒 Время":
@@ -75,6 +77,10 @@ async def handle_menu_buttons(message: types.Message):
         await cmd_help(message)
     elif message.text == "🏠 Главное меню":
         await cmd_menu(message)
+    elif message.text == "🤖 Dixi":
+        # Dixi обрабатывается в отдельном модуле, но здесь можно вызвать команду
+        from .dixi import cmd_dixi
+        await cmd_dixi(message)
 
 @router.message()
 async def process_other_messages(message: types.Message):

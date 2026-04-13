@@ -10,6 +10,7 @@ async def test_cmd_help():
     message.answer.assert_called_once()
     assert "Доступные команды" in message.answer.call_args[0][0]
     assert "/time" in message.answer.call_args[0][0]
+    assert "/dixi" in message.answer.call_args[0][0]
     assert "/setdatetime" not in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio

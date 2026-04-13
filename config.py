@@ -5,3 +5,4 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_IDS = list(map(int, os.getenv("ADMIN_IDS", "").split(","))) if os.getenv("ADMIN_IDS") else []
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
