@@ -5,6 +5,7 @@ Telegram бот для работы с AI/LLM моделями через OpenRo
 ## Возможности
 
 - 🔍 **DeepSeek** - мощная модель для сложных технических задач
+- 🤖 **Claude Haiku** - быстрая и умная модель от Anthropic
 - 🕒 Показ текущего времени
 - 📱 Удобное меню с кнопками
 - ⚡ Быстрые ответы через OpenRouter API
@@ -12,6 +13,7 @@ Telegram бот для работы с AI/LLM моделями через OpenRo
 ## Поддерживаемые модели через OpenRouter
 
 1. **DeepSeek** - использует модель deepseek/deepseek-chat
+2. **Claude Haiku** - использует модель anthropic/claude-3-haiku
 
 ## Команды бота
 
@@ -19,6 +21,7 @@ Telegram бот для работы с AI/LLM моделями через OpenRo
 - `/help` - Справка по командам
 - `/time` - Текущее время
 - `/deepseek` - Работа с моделью DeepSeek
+- `/claude` - Работа с моделью Claude Haiku
 - `/menu` - Показать меню
 
 ## Установка
@@ -40,6 +43,7 @@ BOT_TOKEN=your_telegram_bot_token
 OPENROUTER_API_KEY=your_openrouter_api_key
 # Опционально:
 DEEPSEEK_MODEL=deepseek/deepseek-chat
+CLAUDE_HAIKU_MODEL=anthropic/claude-3-haiku
 ```
 
 4. Запустите бота:
@@ -47,12 +51,19 @@ DEEPSEEK_MODEL=deepseek/deepseek-chat
 python main.py
 ```
 
-## Использование DeepSeek
+## Использование моделей
 
-DeepSeek доступен через:
+### DeepSeek
+Доступен через:
 - Команду `/deepseek`
 - Кнопку "🔍 DeepSeek" в меню
 - Прямые запросы через `/deepseek_ваш_вопрос`
+
+### Claude Haiku
+Доступен через:
+- Команду `/claude`
+- Кнопку "🤖 Claude Haiku" в меню
+- Прямые запросы через `/claude_ваш_вопрос`
 
 ## Тестирование
 
