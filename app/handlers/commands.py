@@ -7,6 +7,9 @@ from app.services.openrouter_client import OpenRouterClient
 
 router = Router()
 
+# Глобальная переменная для отслеживания активного режима
+active_mode = {}
+
 # Создаем клавиатуру с кнопками меню
 def get_menu_keyboard():
     builder = ReplyKeyboardBuilder()
@@ -78,6 +81,9 @@ async def cmd_menu(message: types.Message):
 @router.message(Command("dixi"))
 async def cmd_dixi(message: types.Message):
     """Обработчик команды /dixi - начинает диалог с Дикси"""
+    # Устанавливаем режим Дикси для пользователя
+    active_mode[message.from_user.id] = "dixi"
+    
     instruction_text = (
         "🤖 Дикси готов к общению!\n\n"
         "Отправьте мне любое сообщение, и я передам его Дикси - вашему AI ассистенту через OpenRouter.\n\n"
@@ -93,6 +99,9 @@ async def cmd_dixi(message: types.Message):
 @router.message(Command("deepseek"))
 async def cmd_deepseek(message: types.Message):
     """Обработчик команды /deepseek - начинает диалог с DeepSeek"""
+    # Устанавливаем режим DeepSeek для пользователя
+    active_mode[message.from_user.id] = "deepseek"
+    
     instruction_text = (
         "🔍 DeepSeek готов к общению!\n\n"
         "Отправьте мне любое сообщение, и я передам его DeepSeek - продвинутой AI модели через OpenRouter.\n\n"
@@ -119,9 +128,6 @@ async def handle_menu_buttons(message: types.Message):
         await cmd_deepseek(message)
     elif message.text == "🏠 Главное меню":
         await cmd_menu(message)
-
-# Глобальная переменная для отслеживания активного режима
-active_mode = {}
 
 @router.message()
 async def process_other_messages(message: types.Message):
@@ -174,16 +180,3 @@ async def process_other_messages(message: types.Message):
     
     except Exception as e:
         await message.answer(f"❌ Ошибка при обращении к AI: {str(e)}", reply_markup=get_menu_keyboard())
-
-# Обработчики для установки режима
-@router.message(Command("dixi"))
-async def set_dixi_mode(message: types.Message):
-    """Устанавливает режим Дикси для пользователя"""
-    active_mode[message.from_user.id] = "dixi"
-    await cmd_dixi(message)
-
-@router.message(Command("deepseek"))
-async def set_deepseek_mode(message: types.Message):
-    """Устанавливает режим DeepSeek для пользователя"""
-    active_mode[message.from_user.id] = "deepseek"
-    await cmd_deepseek(message)
