@@ -1,33 +1,26 @@
 import pytest
-from unittest.mock import AsyncMock
-from app.handlers.commands import cmd_help, cmd_start, cmd_time, process_other_messages
+from unittest.mock import AsyncMock, MagicMock
+from app.handlers.commands import cmd_help, cmd_start, cmd_time, process_other_messages, process_menu_callback, MenuCallback
 from datetime import datetime
+from aiogram.types import CallbackQuery, Message
+from aiogram.filters.callback_data import CallbackData
 
 @pytest.mark.asyncio
 async def test_cmd_help():
     message = AsyncMock()
     await cmd_help(message)
     message.answer.assert_called_once()
-    args, kwargs = message.answer.call_args
-    assert "Доступные команды" in args[0]
-    assert "/time" in args[0]
-    assert "/setdatetime" not in args[0]
-    # Проверяем наличие клавиатуры
-    assert "reply_markup" in kwargs
-    keyboard = kwargs["reply_markup"]
-    assert keyboard.resize_keyboard is True
+    assert "Доступные команды" in message.answer.call_args[0][0]
+    assert "/time" in message.answer.call_args[0][0]
+    assert message.answer.call_args[1].get("reply_markup") is not None
 
 @pytest.mark.asyncio
 async def test_cmd_start():
     message = AsyncMock()
     await cmd_start(message)
     message.answer.assert_called_once()
-    args, kwargs = message.answer.call_args
-    assert "Добро пожаловать" in args[0]
-    # Проверяем наличие клавиатуры
-    assert "reply_markup" in kwargs
-    keyboard = kwargs["reply_markup"]
-    assert keyboard.resize_keyboard is True
+    assert "Добро пожаловать" in message.answer.call_args[0][0]
+    assert message.answer.call_args[1].get("reply_markup") is not None
 
 @pytest.mark.asyncio
 async def test_cmd_time():
@@ -36,6 +29,7 @@ async def test_cmd_time():
     message.answer.assert_called_once()
     response = message.answer.call_args[0][0]
     assert "Текущее время" in response
+    assert message.answer.call_args[1].get("reply_markup") is not None
     # Проверяем, что в ответе есть форматированная дата
     assert any(month in response for month in [
         'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
@@ -43,39 +37,59 @@ async def test_cmd_time():
     ])
 
 @pytest.mark.asyncio
-async def test_process_other_messages():
+async def test_process_other_messages_with_text():
     message = AsyncMock()
     message.text = "любое сообщение"
     
     await process_other_messages(message)
     
-    # Не должно вызывать answer для обычных сообщений
+    # Должно вызывать answer для обычных сообщений с предложением меню
+    message.answer.assert_called_once()
+    assert "Используйте кнопки меню" in message.answer.call_args[0][0]
+    assert message.answer.call_args[1].get("reply_markup") is not None
+
+@pytest.mark.asyncio
+async def test_process_other_messages_with_command():
+    message = AsyncMock()
+    message.text = "/some_command"
+    
+    await process_other_messages(message)
+    
+    # Не должно вызывать answer для команд
     message.answer.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_process_other_messages_buttons():
-    # Тест нажатия кнопки "Время"
-    message = AsyncMock()
-    message.text = "🕒 Время"
-    await process_other_messages(message)
-    message.answer.assert_called_once()
-    response = message.answer.call_args[0][0]
-    assert "Текущее время" in response
-    message.reset_mock()
+async def test_process_menu_callback_help():
+    callback_query = AsyncMock()
+    callback_query.message = AsyncMock()
+    callback_data = MenuCallback(action="help")
     
-    # Тест нажатия кнопки "Помощь"
-    message.text = "❓ Помощь"
-    await process_other_messages(message)
-    message.answer.assert_called_once()
-    args, kwargs = message.answer.call_args
-    assert "Доступные команды" in args[0]
-    assert "reply_markup" in kwargs
-    message.reset_mock()
+    await process_menu_callback(callback_query, callback_data)
     
-    # Тест нажатия кнопки "Старт"
-    message.text = "🚀 Старт"
-    await process_other_messages(message)
-    message.answer.assert_called_once()
-    args, kwargs = message.answer.call_args
-    assert "Добро пожаловать" in args[0]
-    assert "reply_markup" in kwargs
+    callback_query.message.edit_text.assert_called_once()
+    assert "Доступные команды" in callback_query.message.edit_text.call_args[0][0]
+    callback_query.answer.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_process_menu_callback_time():
+    callback_query = AsyncMock()
+    callback_query.message = AsyncMock()
+    callback_data = MenuCallback(action="time")
+    
+    await process_menu_callback(callback_query, callback_data)
+    
+    callback_query.message.edit_text.assert_called_once()
+    assert "Текущее время" in callback_query.message.edit_text.call_args[0][0]
+    callback_query.answer.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_process_menu_callback_main_menu():
+    callback_query = AsyncMock()
+    callback_query.message = AsyncMock()
+    callback_data = MenuCallback(action="main_menu")
+    
+    await process_menu_callback(callback_query, callback_data)
+    
+    callback_query.message.edit_text.assert_called_once()
+    assert "Главное меню" in callback_query.message.edit_text.call_args[0][0]
+    callback_query.answer.assert_called_once()
