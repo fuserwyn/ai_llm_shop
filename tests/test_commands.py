@@ -10,7 +10,8 @@ async def test_cmd_help():
     message.answer.assert_called_once()
     assert "Доступные команды" in message.answer.call_args[0][0]
     assert "/time" in message.answer.call_args[0][0]
-    assert "/setdatetime" not in message.answer.call_args[0][0]
+    assert "/dixi" not in message.answer.call_args[0][0]
+    assert "/deepseek" in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
 async def test_cmd_start():
@@ -18,6 +19,8 @@ async def test_cmd_start():
     await cmd_start(message)
     message.answer.assert_called_once()
     assert "Добро пожаловать" in message.answer.call_args[0][0]
+    assert "DeepSeek" in message.answer.call_args[0][0]
+    assert "Дикси" not in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
 async def test_cmd_time():
@@ -39,5 +42,5 @@ async def test_process_other_messages():
     
     await process_other_messages(message)
     
-    # Не должно вызывать answer для обычных сообщений
-    message.answer.assert_not_called()
+    # Должно вызывать answer для обработки через DeepSeek
+    message.answer.assert_called_once()

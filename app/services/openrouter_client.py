@@ -9,7 +9,6 @@ class OpenRouterClient:
     def __init__(self):
         self.api_key = config.OPENROUTER_API_KEY
         self.base_url = config.OPENROUTER_BASE_URL
-        self.model = config.OPENROUTER_MODEL
         self.deepseek_model = config.DEEPSEEK_MODEL
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -23,9 +22,9 @@ class OpenRouterClient:
         if not self.api_key:
             raise ValueError("OPENROUTER_API_KEY не установлен в конфигурации")
         
-        # Используем указанную модель или модель по умолчанию
+        # Используем указанную модель или модель DeepSeek по умолчанию
         if model is None:
-            model = self.model
+            model = self.deepseek_model
         
         payload = {
             "model": model,
