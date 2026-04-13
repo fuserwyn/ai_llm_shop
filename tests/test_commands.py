@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 from app.handlers.commands import cmd_help, cmd_start, cmd_time, process_other_messages
 from datetime import datetime
 
@@ -33,11 +33,29 @@ async def test_cmd_time():
     ])
 
 @pytest.mark.asyncio
-async def test_process_other_messages():
+async def test_process_other_messages_with_dixi():
     message = AsyncMock()
     message.text = "любое сообщение"
+    message.text.startswith = AsyncMock(return_value=False)
+    
+    with patch('app.handlers.commands.get_dixi_response', return_value="AI ответ"):
+        await process_other_messages(message)
+        message.answer.assert_called_once_with("AI ответ", reply_markup=AsyncMock())
+
+@pytest.mark.asyncio
+async def test_process_other_messages_ignore_command():
+    message = AsyncMock()
+    message.text = "/start"
+    message.text.startswith = AsyncMock(return_value=True)
     
     await process_other_messages(message)
+    message.answer.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_process_other_messages_ignore_menu_button():
+    message = AsyncMock()
+    message.text = "🕒 Время"
+    message.text.startswith = AsyncMock(return_value=False)
     
-    # Не должно вызывать answer для обычных сообщений
+    await process_other_messages(message)
     message.answer.assert_not_called()
