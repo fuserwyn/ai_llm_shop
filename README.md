@@ -4,7 +4,6 @@ Telegram бот для работы с AI/LLM моделями через OpenRo
 
 ## Возможности
 
-- 🤖 **Дикси** - AI ассистент на базе GPT моделей
 - 🔍 **DeepSeek** - мощная модель для сложных технических задач
 - 🕒 Показ текущего времени
 - 📱 Удобное меню с кнопками
@@ -12,15 +11,13 @@ Telegram бот для работы с AI/LLM моделями через OpenRo
 
 ## Поддерживаемые модели через OpenRouter
 
-1. **Дикси** - использует модель из конфигурации (по умолчанию: openai/gpt-3.5-turbo)
-2. **DeepSeek** - использует модель deepseek/deepseek-chat
+1. **DeepSeek** - использует модель deepseek/deepseek-chat
 
 ## Команды бота
 
 - `/start` - Начать работу
 - `/help` - Справка по командам
 - `/time` - Текущее время
-- `/dixi` - Общение с AI ассистентом Дикси
 - `/deepseek` - Работа с моделью DeepSeek
 - `/menu` - Показать меню
 
@@ -42,7 +39,6 @@ pip install -r requirements.txt
 BOT_TOKEN=your_telegram_bot_token
 OPENROUTER_API_KEY=your_openrouter_api_key
 # Опционально:
-OPENROUTER_MODEL=openai/gpt-3.5-turbo
 DEEPSEEK_MODEL=deepseek/deepseek-chat
 ```
 
