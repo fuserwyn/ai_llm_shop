@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
-from app.handlers.commands import cmd_help, cmd_start, cmd_time, process_other_messages
+from app.handlers.commands import cmd_help, cmd_start, cmd_time, cmd_deepseek, process_other_messages
 from datetime import datetime
 
 @pytest.mark.asyncio
@@ -10,6 +10,7 @@ async def test_cmd_help():
     message.answer.assert_called_once()
     assert "Доступные команды" in message.answer.call_args[0][0]
     assert "/time" in message.answer.call_args[0][0]
+    assert "/deepseek" in message.answer.call_args[0][0]
     assert "/setdatetime" not in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
@@ -18,6 +19,7 @@ async def test_cmd_start():
     await cmd_start(message)
     message.answer.assert_called_once()
     assert "Добро пожаловать" in message.answer.call_args[0][0]
+    assert "DeepSeek" in message.answer.call_args[0][0]
 
 @pytest.mark.asyncio
 async def test_cmd_time():
@@ -31,6 +33,15 @@ async def test_cmd_time():
         'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
         'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
     ])
+
+@pytest.mark.asyncio
+async def test_cmd_deepseek():
+    message = AsyncMock()
+    await cmd_deepseek(message)
+    message.answer.assert_called_once()
+    response = message.answer.call_args[0][0]
+    assert "DeepSeek готов к работе" in response
+    assert "сложными техническими вопросами" in response
 
 @pytest.mark.asyncio
 async def test_process_other_messages():
