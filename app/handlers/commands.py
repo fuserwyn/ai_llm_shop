@@ -107,7 +107,7 @@ async def process_other_messages(message: types.Message):
         # Инициализируем клиент OpenRouter
         client = OpenRouterClient()
         
-        # Отправляем сообщение пользователя в OpenRouter к DeepSeek
+        # Отправляем сообщение пользователя в DeepSeek
         response = await client.chat_completion(
             messages=[
                 {
