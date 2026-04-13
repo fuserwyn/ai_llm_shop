@@ -26,8 +26,8 @@ async def cmd_help(message: types.Message):
         "/help - Показать это сообщение\n"
         "/time - Показать текущее время\n"
         "/dixi - Поговорить с Дикси (AI ассистент)\n"
-        "/menu - Показать меню с кнопками\n"
-        "# Добавьте другие команды по необходимости"
+        "/menu - Показать меню с кнопками\n\n"
+        "🤖 Дикси работает через OpenRouter API. После команды /dixi просто отправляйте сообщения - они будут переданы AI ассистенту."
     )
     await message.answer(help_text, reply_markup=get_menu_keyboard())
 
@@ -39,7 +39,9 @@ async def cmd_start(message: types.Message):
         "Я бот для работы с AI/LLM моделями.\n"
         "Используйте кнопки ниже или команды для навигации.\n\n"
         "Теперь доступен Дикси - AI ассистент через OpenRouter!\n"
-        "Используйте команду /dixi или кнопку '🤖 Дикси'"
+        "Используйте команду /dixi или кнопку '🤖 Дикси'\n\n"
+        "Для работы Дикси необходим API ключ OpenRouter.\n"
+        "Получите его на https://openrouter.ai и добавьте в .env файл."
     )
     await message.answer(welcome_text, reply_markup=get_menu_keyboard())
 
@@ -82,7 +84,8 @@ async def cmd_dixi(message: types.Message):
         "• Помогать с кодом\n"
         "• Обсуждать идеи\n"
         "• И многое другое!\n\n"
-        "Просто напишите что-нибудь..."
+        "Просто напишите что-нибудь...\n\n"
+        "⚠️ Для работы необходим API ключ OpenRouter в .env файле."
     )
     await message.answer(instruction_text, reply_markup=get_menu_keyboard())
 
@@ -98,32 +101,70 @@ async def handle_menu_buttons(message: types.Message):
     elif message.text == "🏠 Главное меню":
         await cmd_menu(message)
 
+# Глобальный флаг для отслеживания режима Дикси
+dixi_mode_users = set()
+
 @router.message()
 async def process_other_messages(message: types.Message):
     """Обработчик всех остальных сообщений"""
-    # Если это не команда и не кнопка меню, отправляем Дикси
-    try:
-        # Инициализируем клиент OpenRouter
-        client = OpenRouterClient()
-        
-        # Отправляем сообщение пользователя в OpenRouter
-        response = await client.chat_completion(
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Ты - Дикси, дружелюбный AI ассистент. Отвечай на русском языке, будь полезным и вежливым."
-                },
-                {
-                    "role": "user",
-                    "content": message.text
-                }
-            ]
-        )
-        
-        if response:
-            await message.answer(f"🤖 Дикси: {response}", reply_markup=get_menu_keyboard())
-        else:
-            await message.answer("⚠️ Извините, Дикси временно недоступен. Попробуйте позже.", reply_markup=get_menu_keyboard())
+    # Проверяем, находится ли пользователь в режиме Дикси
+    # (после команды /dixi или нажатия кнопки Дикси)
+    user_id = message.from_user.id
     
-    except Exception as e:
-        await message.answer(f"❌ Ошибка при обращении к Дикси: {str(e)}", reply_markup=get_menu_keyboard())
+    # Если пользователь отправил /dixi или нажал кнопку Дикси, включаем режим
+    if message.text == "/dixi" or message.text == "🤖 Дикси":
+        dixi_mode_users.add(user_id)
+        return
+    
+    # Если пользователь в режиме Дикси, обрабатываем сообщение через OpenRouter
+    if user_id in dixi_mode_users:
+        try:
+            # Инициализируем клиент OpenRouter
+            client = OpenRouterClient()
+            
+            # Отправляем сообщение пользователя в OpenRouter
+            response = await client.chat_completion(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Ты - Дикси, дружелюбный AI ассистент. Отвечай на русском языке, будь полезным и вежливым. Отвечай кратко и по делу."
+                    },
+                    {
+                        "role": "user",
+                        "content": message.text
+                    }
+                ]
+            )
+            
+            if response:
+                await message.answer(f"🤖 Дикси: {response}", reply_markup=get_menu_keyboard())
+            else:
+                await message.answer("⚠️ Извините, Дикси временно недоступен. Попробуйте позже.", reply_markup=get_menu_keyboard())
+        
+        except ValueError as e:
+            if "OPENROUTER_API_KEY не установлен" in str(e):
+                await message.answer(
+                    "❌ API ключ OpenRouter не настроен.\n\n"
+                    "Для работы Дикси необходимо:\n"
+                    "1. Получить API ключ на https://openrouter.ai\n"
+                    "2. Добавить его в .env файл:\n"
+                    "   OPENROUTER_API_KEY=ваш_ключ\n\n"
+                    "После настройки перезапустите бота.",
+                    reply_markup=get_menu_keyboard()
+                )
+                # Выключаем режим Дикси для этого пользователя
+                dixi_mode_users.discard(user_id)
+            else:
+                await message.answer(f"❌ Ошибка: {str(e)}", reply_markup=get_menu_keyboard())
+        
+        except Exception as e:
+            await message.answer(f"❌ Ошибка при обращении к Дикси: {str(e)}", reply_markup=get_menu_keyboard())
+    else:
+        # Если не в режиме Дикси, просто показываем меню
+        await message.answer("Выберите действие из меню ниже или используйте команду /dixi для общения с AI ассистентом.", reply_markup=get_menu_keyboard())
+
+# Обработчик для сброса режима Дикси при других командах
+@router.message(Command("start", "help", "time", "menu"))
+async def reset_dixi_mode(message: types.Message):
+    """Сбрасывает режим Дикси при использовании других команд"""
+    dixi_mode_users.discard(message.from_user.id)
