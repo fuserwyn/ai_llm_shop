@@ -27,7 +27,7 @@ async def cmd_help(message: types.Message):
         "/help - Показать это сообщение\n"
         "/time - Показать текущее время\n"
         "/dixi - Поговорить с Дикси (AI ассистент)\n"
-        "/deepseek - Поговорить с DeepSeek (продвинутый AI)\n"
+        "/deepseek - Задать вопрос DeepSeek модели\n"
         "/menu - Показать меню с кнопками\n"
         "# Добавьте другие команды по необходимости"
     )
@@ -42,8 +42,8 @@ async def cmd_start(message: types.Message):
         "Используйте кнопки ниже или команды для навигации.\n\n"
         "Теперь доступны:\n"
         "• Дикси - AI ассистент через OpenRouter!\n"
-        "• DeepSeek - продвинутый AI модель через OpenRouter!\n\n"
-        "Используйте команды /dixi или /deepseek или соответствующие кнопки"
+        "• DeepSeek - мощная модель для сложных задач!\n\n"
+        "Используйте команды /dixi или /deepseek"
     )
     await message.answer(welcome_text, reply_markup=get_menu_keyboard())
 
@@ -92,17 +92,16 @@ async def cmd_dixi(message: types.Message):
 
 @router.message(Command("deepseek"))
 async def cmd_deepseek(message: types.Message):
-    """Обработчик команды /deepseek - начинает диалог с DeepSeek"""
+    """Обработчик команды /deepseek - начинает работу с DeepSeek"""
     instruction_text = (
-        "🔍 DeepSeek готов к общению!\n\n"
-        "Отправьте мне любое сообщение, и я передам его DeepSeek - продвинутой AI модели через OpenRouter.\n\n"
-        "DeepSeek может:\n"
-        "• Решать сложные задачи\n"
-        "• Анализировать код\n"
-        "• Помогать с исследованиями\n"
-        "• Обсуждать технические темы\n"
-        "• И многое другое!\n\n"
-        "Просто напишите что-нибудь..."
+        "🔍 DeepSeek готов к работе!\n\n"
+        "Отправьте мне любой запрос, и я передам его модели DeepSeek через OpenRouter.\n\n"
+        "DeepSeek отлично справляется с:\n"
+        "• Сложными техническими вопросами\n"
+        "• Анализом кода и алгоритмов\n"
+        "• Научными и исследовательскими задачами\n"
+        "• Логическими рассуждениями\n\n"
+        "Задайте ваш вопрос..."
     )
     await message.answer(instruction_text, reply_markup=get_menu_keyboard())
 
@@ -120,70 +119,66 @@ async def handle_menu_buttons(message: types.Message):
     elif message.text == "🏠 Главное меню":
         await cmd_menu(message)
 
-# Глобальная переменная для отслеживания активного режима
-active_mode = {}
-
 @router.message()
 async def process_other_messages(message: types.Message):
     """Обработчик всех остальных сообщений"""
-    user_id = message.from_user.id
-    
-    # Определяем, какой режим использовать
-    # Если пользователь недавно вызывал /deepseek, используем DeepSeek
-    # Иначе используем Дикси
-    use_deepseek = active_mode.get(user_id) == "deepseek"
-    
-    # Сбрасываем режим после использования
-    if user_id in active_mode:
-        del active_mode[user_id]
-    
+    # Если это не команда и не кнопка меню, отправляем Дикси
     try:
         # Инициализируем клиент OpenRouter
         client = OpenRouterClient()
-        
-        if use_deepseek:
-            # Используем DeepSeek модель
-            model = "deepseek/deepseek-chat"
-            system_prompt = "Ты - DeepSeek, продвинутый AI ассистент. Отвечай на русском языке, будь точным, информативным и полезным. Ты специализируешься на технических и сложных вопросах."
-            assistant_name = "DeepSeek"
-        else:
-            # Используем стандартную модель (Дикси)
-            model = None  # Будет использована модель из конфигурации
-            system_prompt = "Ты - Дикси, дружелюбный AI ассистент. Отвечай на русском языке, будь полезным и вежливым."
-            assistant_name = "Дикси"
         
         # Отправляем сообщение пользователя в OpenRouter
         response = await client.chat_completion(
             messages=[
                 {
                     "role": "system",
-                    "content": system_prompt
+                    "content": "Ты - Дикси, дружелюбный AI ассистент. Отвечай на русском языке, будь полезным и вежливым."
                 },
                 {
                     "role": "user",
                     "content": message.text
                 }
-            ],
-            model=model
+            ]
         )
         
         if response:
-            await message.answer(f"🤖 {assistant_name}: {response}", reply_markup=get_menu_keyboard())
+            await message.answer(f"🤖 Дикси: {response}", reply_markup=get_menu_keyboard())
         else:
-            await message.answer(f"⚠️ Извините, {assistant_name} временно недоступен. Попробуйте позже.", reply_markup=get_menu_keyboard())
+            await message.answer("⚠️ Извините, Дикси временно недоступен. Попробуйте позже.", reply_markup=get_menu_keyboard())
     
     except Exception as e:
-        await message.answer(f"❌ Ошибка при обращении к AI: {str(e)}", reply_markup=get_menu_keyboard())
+        await message.answer(f"❌ Ошибка при обращении к Дикси: {str(e)}", reply_markup=get_menu_keyboard())
 
-# Обработчики для установки режима
-@router.message(Command("dixi"))
-async def set_dixi_mode(message: types.Message):
-    """Устанавливает режим Дикси для пользователя"""
-    active_mode[message.from_user.id] = "dixi"
-    await cmd_dixi(message)
-
-@router.message(Command("deepseek"))
-async def set_deepseek_mode(message: types.Message):
-    """Устанавливает режим DeepSeek для пользователя"""
-    active_mode[message.from_user.id] = "deepseek"
-    await cmd_deepseek(message)
+@router.message(lambda message: message.text and message.text.startswith("/deepseek_"))
+async def process_deepseek_query(message: types.Message):
+    """Обработчик прямых запросов к DeepSeek через команду"""
+    query = message.text.replace("/deepseek_", "", 1).strip()
+    if not query:
+        await message.answer("🔍 Пожалуйста, укажите запрос после команды /deepseek_")
+        return
+    
+    try:
+        client = OpenRouterClient()
+        
+        # Используем модель DeepSeek через OpenRouter
+        response = await client.chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Ты - DeepSeek, мощная AI модель. Отвечай на русском языке, будь точным и информативным. Предоставляй развернутые ответы на сложные вопросы."
+                },
+                {
+                    "role": "user",
+                    "content": query
+                }
+            ],
+            model="deepseek/deepseek-chat"  # Указываем модель DeepSeek
+        )
+        
+        if response:
+            await message.answer(f"🔍 DeepSeek: {response}", reply_markup=get_menu_keyboard())
+        else:
+            await message.answer("⚠️ Извините, DeepSeek временно недоступен. Попробуйте позже.", reply_markup=get_menu_keyboard())
+    
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при обращении к DeepSeek: {str(e)}", reply_markup=get_menu_keyboard())
