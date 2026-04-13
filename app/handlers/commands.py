@@ -102,7 +102,7 @@ async def handle_menu_buttons(message: types.Message):
 @router.message()
 async def process_other_messages(message: types.Message):
     """Обработчик всех остальных сообщений"""
-    # Если это не команда и не кнопка меню, отправляем в DeepSeek
+    # Если это не команда и не кнопка меню, отправляем DeepSeek
     try:
         # Инициализируем клиент OpenRouter
         client = OpenRouterClient()
