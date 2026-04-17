@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import AsyncMock
-from app.handlers.commands import cmd_help, cmd_start, cmd_time, process_other_messages
+from app.handlers.commands import cmd_help, cmd_start, cmd_time, cmd_date, process_other_messages
 from datetime import datetime
 
 @pytest.mark.asyncio
@@ -10,6 +10,7 @@ async def test_cmd_help():
     message.answer.assert_called_once()
     assert "Доступные команды" in message.answer.call_args[0][0]
     assert "/time" in message.answer.call_args[0][0]
+    assert "/date" in message.answer.call_args[0][0]
     assert "/dixi" not in message.answer.call_args[0][0]
     assert "/deepseek" in message.answer.call_args[0][0]
 
@@ -29,6 +30,19 @@ async def test_cmd_time():
     message.answer.assert_called_once()
     response = message.answer.call_args[0][0]
     assert "Текущее время" in response
+    # Проверяем, что в ответе есть форматированная дата
+    assert any(month in response for month in [
+        'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ])
+
+@pytest.mark.asyncio
+async def test_cmd_date():
+    message = AsyncMock()
+    await cmd_date(message)
+    message.answer.assert_called_once()
+    response = message.answer.call_args[0][0]
+    assert "Сегодня" in response
     # Проверяем, что в ответе есть форматированная дата
     assert any(month in response for month in [
         'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
