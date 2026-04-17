@@ -11,6 +11,7 @@ router = Router()
 def get_menu_keyboard():
     builder = ReplyKeyboardBuilder()
     builder.button(text="🕒 Время")
+    builder.button(text="📅 Дата")
     builder.button(text="ℹ️ Помощь")
     builder.button(text="🔍 DeepSeek")
     builder.button(text="🤖 Claude Haiku")
@@ -26,6 +27,7 @@ async def cmd_help(message: types.Message):
         "/start - Начать работу с ботом\n"
         "/help - Показать это сообщение\n"
         "/time - Показать текущее время\n"
+        "/date - Показать текущую дату\n"
         "/deepseek - Задать вопрос DeepSeek модели\n"
         "/claude - Задать вопрос Claude Haiku модели\n"
         "/menu - Показать меню с кнопками\n"
@@ -69,6 +71,26 @@ async def cmd_time(message: types.Message):
     )
     await message.answer(time_text, reply_markup=get_menu_keyboard())
 
+@router.message(Command("date"))
+async def cmd_date(message: types.Message):
+    """Обработчик команды /date - показывает текущую дату"""
+    now = datetime.now()
+    
+    # Форматируем дату в читаемый вид
+    months = [
+        'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+        'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ]
+    
+    day = now.day
+    month_name = months[now.month - 1]
+    year = now.year
+    
+    date_text = (
+        f"📅 Сегодня: {day} {month_name} {year} года"
+    )
+    await message.answer(date_text, reply_markup=get_menu_keyboard())
+
 @router.message(Command("menu"))
 async def cmd_menu(message: types.Message):
     """Обработчик команды /menu - показывает меню с кнопками"""
@@ -105,11 +127,13 @@ async def cmd_claude(message: types.Message):
     )
     await message.answer(instruction_text, reply_markup=get_menu_keyboard())
 
-@router.message(lambda message: message.text in ["🕒 Время", "ℹ️ Помощь", "🔍 DeepSeek", "🤖 Claude Haiku", "🏠 Главное меню"])
+@router.message(lambda message: message.text in ["🕒 Время", "📅 Дата", "ℹ️ Помощь", "🔍 DeepSeek", "🤖 Claude Haiku", "🏠 Главное меню"])
 async def handle_menu_buttons(message: types.Message):
     """Обработчик нажатий на кнопки меню"""
     if message.text == "🕒 Время":
         await cmd_time(message)
+    elif message.text == "📅 Дата":
+        await cmd_date(message)
     elif message.text == "ℹ️ Помощь":
         await cmd_help(message)
     elif message.text == "🔍 DeepSeek":
