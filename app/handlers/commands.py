@@ -16,7 +16,7 @@ def get_menu_keyboard():
     builder.button(text="🔍 DeepSeek")
     builder.button(text="🤖 Claude Haiku")
     builder.button(text="🏠 Главное меню")
-    builder.adjust(2, 2, 1)  # 2 кнопки в первых двух рядах, 1 в последнем
+    builder.adjust(2, -1, 1)  # 2 кнопки в первом ряду, остальные автоматически, 1 в последнем
     return builder.as_markup(resize_keyboard=True)
 
 @router.message(Command("help"))
