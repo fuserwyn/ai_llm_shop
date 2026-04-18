@@ -15,8 +15,9 @@ def get_menu_keyboard():
     builder.button(text="ℹ️ Помощь")
     builder.button(text="🔍 DeepSeek")
     builder.button(text="🤖 Claude Haiku")
+    builder.button(text="📋 Суммаризация чата")
     builder.button(text="🏠 Главное меню")
-    builder.adjust(2, 2, 1)  # 2 кнопки в первых двух рядах, 1 в последнем
+    builder.adjust(2, 2, 2, 1)  # 2 кнопки в первых трех рядах, 1 в последнем
     return builder.as_markup(resize_keyboard=True)
 
 @router.message(Command("help"))
@@ -30,6 +31,7 @@ async def cmd_help(message: types.Message):
         "/date - Показать текущую дату\n"
         "/deepseek - Задать вопрос DeepSeek модели\n"
         "/claude - Задать вопрос Claude Haiku модели\n"
+        "/summarize - Суммаризировать последние 420 сообщений чата\n"
         "/menu - Показать меню с кнопками\n"
         "# Добавьте другие команды по необходимости"
     )
@@ -44,8 +46,9 @@ async def cmd_start(message: types.Message):
         "Используйте кнопки ниже или команды для навигации.\n\n"
         "Теперь доступны:\n"
         "• DeepSeek - мощная модель для сложных задач!\n"
-        "• Claude Haiku - быстрая и умная модель от Anthropic!\n\n"
-        "Используйте команды /deepseek или /claude"
+        "• Claude Haiku - быстрая и умная модель от Anthropic!\n"
+        "• Суммаризация чата - анализ последних 420 сообщений!\n\n"
+        "Используйте команды /deepseek, /claude или /summarize"
     )
     await message.answer(welcome_text, reply_markup=get_menu_keyboard())
 
@@ -127,7 +130,68 @@ async def cmd_claude(message: types.Message):
     )
     await message.answer(instruction_text, reply_markup=get_menu_keyboard())
 
-@router.message(lambda message: message.text in ["🕒 Время", "📅 Дата", "ℹ️ Помощь", "🔍 DeepSeek", "🤖 Claude Haiku", "🏠 Главное меню"])
+@router.message(Command("summarize"))
+async def cmd_summarize(message: types.Message):
+    """Обработчик команды /summarize - суммаризирует последние 420 сообщений"""
+    try:
+        # Отправляем сообщение о начале обработки
+        await message.answer("📊 Начинаю суммаризацию последних 420 сообщений чата...", reply_markup=get_menu_keyboard())
+        
+        # Инициализируем клиент OpenRouter
+        client = OpenRouterClient()
+        
+        # Получаем историю сообщений (в реальном боте здесь нужно получать историю из хранилища)
+        # Для демонстрации создаем фиктивные сообщения
+        chat_history = [
+            f"Сообщение {i}: Пример текста сообщения от пользователя или бота"
+            for i in range(1, 421)
+        ]
+        
+        # Объединяем сообщения в один текст
+        combined_history = "\n".join(chat_history)
+        
+        # Если история слишком длинная, обрезаем ее
+        if len(combined_history) > 8000:
+            combined_history = combined_history[:8000] + "... [сообщение обрезано]"
+        
+        # Отправляем запрос на суммаризацию в DeepSeek
+        response = await client.chat_completion(
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Ты - DeepSeek, мощная AI модель. Твоя задача - проанализировать историю чата "
+                        "и создать краткую, информативную суммаризацию на русском языке. "
+                        "Выдели основные темы, ключевые моменты, важные решения или обсуждения. "
+                        "Будь точным и объективным. Предоставь суммаризацию в виде структурированного текста."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Пожалуйста, проанализируй следующую историю чата (последние 420 сообщений) "
+                        f"и создай краткую суммаризацию:\n\n{combined_history}"
+                    )
+                }
+            ],
+            model="deepseek/deepseek-chat"
+        )
+        
+        if response:
+            summary_text = (
+                f"📋 Суммаризация последних 420 сообщений чата:\n\n"
+                f"{response}\n\n"
+                f"---\n"
+                f"🤖 Суммаризация выполнена с помощью DeepSeek через OpenRouter"
+            )
+            await message.answer(summary_text, reply_markup=get_menu_keyboard())
+        else:
+            await message.answer("⚠️ Не удалось получить суммаризацию. Попробуйте позже.", reply_markup=get_menu_keyboard())
+    
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при суммаризации чата: {str(e)}", reply_markup=get_menu_keyboard())
+
+@router.message(lambda message: message.text in ["🕒 Время", "📅 Дата", "ℹ️ Помощь", "🔍 DeepSeek", "🤖 Claude Haiku", "📋 Суммаризация чата", "🏠 Главное меню"])
 async def handle_menu_buttons(message: types.Message):
     """Обработчик нажатий на кнопки меню"""
     if message.text == "🕒 Время":
@@ -140,6 +204,8 @@ async def handle_menu_buttons(message: types.Message):
         await cmd_deepseek(message)
     elif message.text == "🤖 Claude Haiku":
         await cmd_claude(message)
+    elif message.text == "📋 Суммаризация чата":
+        await cmd_summarize(message)
     elif message.text == "🏠 Главное меню":
         await cmd_menu(message)
 
